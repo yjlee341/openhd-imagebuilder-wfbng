@@ -90,6 +90,29 @@ function install_openhd {
     elif [[ "${OS}" == "raspbian" ]]; then
         install_raspbian_packages
 
+        # --- rtl8812au 드라이버 설치 (wfb-ng 의존성) ---
+        echo "Installing rtl8812au driver for wfb-ng from svpcom/rtl8812au..."
+
+        # 드라이버 빌드에 필요한 핵심 의존성 설치 (커널 헤더 포함)
+        # raspberrypi-kernel-headers 패키지는 dkms가 올바른 커널에 대해 빌드하는 데 필수적입니다.
+        apt-get update
+        apt-get install -y --no-install-recommends git dkms build-essential raspberrypi-kernel-headers
+
+        # 드라이버 소스 코드 클론
+        cd /usr/src
+        if [ -d "rtl8812au" ]; then
+          rm -rf rtl8812au
+        fi
+        # v5.2.20 태그를 사용하여 특정 버전을 클론합니다.
+        git clone -b v5.2.20 https://github.com/svpcom/rtl8812au.git
+
+        # dkms를 사용하여 드라이버 설치
+        cd rtl8812au
+        ./dkms-install.sh
+
+        echo "rtl8812au driver installation finished."
+        # --- 드라이버 설치 끝 ---
+
         # --- wfb-ng 설치 스크립트 실행 코드 추가 ---
         echo "Downloading and running wfb-ng install_gs.sh script..."
 
