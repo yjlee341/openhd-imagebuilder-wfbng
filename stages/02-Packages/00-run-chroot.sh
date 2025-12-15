@@ -22,10 +22,10 @@ function install_x20_packages {
 # Raspbian-specific code
 function install_raspbian_packages {
     sudo apt update && apt remove -y dkms
-    BASE_PACKAGES="openhd-sys-utils openhd qopenhd apt-transport-https apt-utils open-hd-web-ui"
+    BASE_PACKAGES="openhd-sys-utils apt-transport-https apt-utils"
     PLATFORM_PACKAGES_HOLD="raspberrypi-kernel libraspberrypi-dev libraspberrypi-bin libraspberrypi0 libraspberrypi-doc raspberrypi-bootloader"
     PLATFORM_PACKAGES_REMOVE="locales gdb librsvg2-2 guile-2.2-libs firmware-libertas gcc-10 nfs-common libcamera* raspberrypi-kernel"
-    PLATFORM_PACKAGES="openhd-linux-pi firmware-atheros openhd-userland libseek-thermal libcamera-openhd openhd-qt openssh-server"
+    PLATFORM_PACKAGES="firmware-atheros openhd-userland libseek-thermal libcamera-openhd openhd-qt openssh-server"
 }
 # Ubuntu-Rockship-specific code
 function install_radxa-ubuntu_packages {
@@ -88,9 +88,30 @@ function install_openhd {
         apt install libpoco-dev -y
         install_x20_packages
     elif [[ "${OS}" == "raspbian" ]]; then
-        apt update
-        apt install libpoco-dev -y
         install_raspbian_packages
+
+        # --- wfb-ng 설치 스크립트 실행 코드 추가 ---
+        echo "Downloading and running wfb-ng install_gs.sh script..."
+
+        # wget이 설치되어 있는지 확인하고, 없으면 설치
+        apt-get install -y --no-install-recommends wget
+
+        # install_gs.sh 스크립트 다운로드
+        # GitHub 페이지 URL이 아닌 'Raw' 컨텐츠 URL을 사용해야 합니다.
+        wget https://raw.githubusercontent.com/svpcom/wfb-ng/master/scripts/install_gs.sh -O install_wfb_ng.sh
+
+        # 스크립트에 실행 권한 부여
+        chmod +x install_wfb_ng.sh
+
+        # 스크립트 실행
+        # 스크립트 내부에서 필요한 모든 작업을 수행합니다.
+        ./install_wfb_ng.sh
+
+        # 다운로드한 스크립트 파일 정리
+        rm install_wfb_ng.sh
+
+        echo "wfb-ng installation via script finished."
+        # --- wfb-ng 설치 코드 끝 ---
     elif [[ "${OS}" == "radxa-ubuntu-rock5b" ]] || [[ "${OS}" == "radxa-ubuntu-rock5a" ]] ; then
         sudo add-apt-repository -r "deb https://ppa.launchpadcontent.net/jjriek/rockchip/ubuntu jammy main"
         apt update
