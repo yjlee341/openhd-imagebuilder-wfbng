@@ -93,12 +93,18 @@ function install_openhd {
         # --- rtl8812au 드라이버 설치 (wfb-ng 의존성) ---
         echo "Installing rtl8812au driver for wfb-ng from svpcom/rtl8812au..."
 
-        # 드라이버 빌드에 필요한 핵심 의존성 설치 (커널 헤더 포함)
-        # raspberrypi-kernel-headers 패키지는 dkms가 올바른 커널에 대해 빌드하는 데 필수적입니다.
+        # 1. 시스템 전체 업그레이드를 통해 커널과 헤더 버전 맞추기
+        echo "Running full system distribution upgrade to match kernel and header versions..."
         apt-get update
+        # DEBIAN_FRONTEND=noninteractive: 사용자 입력 없이 진행
+        DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade
+
+        # 2. 드라이버 빌드에 필요한 핵심 의존성 설치
+        echo "Installing dependencies for driver build..."
         apt-get install -y --no-install-recommends git dkms build-essential raspberrypi-kernel-headers
 
-        # 드라이버 소스 코드 클론
+        # 3. 드라이버 소스 코드 클론 및 설치
+        echo "Cloning and installing driver via dkms..."
         cd /usr/src
         if [ -d "rtl8812au" ]; then
           rm -rf rtl8812au
@@ -106,8 +112,8 @@ function install_openhd {
         # v5.2.20 태그를 사용하여 특정 버전을 클론합니다.
         git clone -b v5.2.20 https://github.com/svpcom/rtl8812au.git
 
-        # dkms를 사용하여 드라이버 설치
         cd rtl8812au
+        # 이제 커널과 헤더 버전이 일치하므로 dkms가 성공해야 합니다.
         ./dkms-install.sh
 
         echo "rtl8812au driver installation finished."
@@ -135,6 +141,7 @@ function install_openhd {
 
         echo "wfb-ng installation via script finished."
         # --- wfb-ng 설치 코드 끝 ---
+
     elif [[ "${OS}" == "radxa-ubuntu-rock5b" ]] || [[ "${OS}" == "radxa-ubuntu-rock5a" ]] ; then
         sudo add-apt-repository -r "deb https://ppa.launchpadcontent.net/jjriek/rockchip/ubuntu jammy main"
         apt update
